@@ -34,6 +34,7 @@
 #import "Three20UINavigator/TTURLObject.h"
 #import "Three20UINavigator/TTURLMap.h"
 #import "Three20UINavigator/TTBaseNavigationController.h"
+#import "Three20UINavigator/TTURLAction.h"
 
 // UICommon
 #import "Three20UICommon/TTGlobalUICommon.h"
