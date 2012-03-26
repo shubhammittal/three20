@@ -236,4 +236,6 @@
 
 - (void)logMemoryUsage;
 
++ (BOOL)createPathIfNecessary:(NSString*)path;
+
 @end

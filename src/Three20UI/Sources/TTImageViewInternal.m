@@ -52,6 +52,7 @@ TT_FIX_CATEGORY_BUG(TTImageViewInternal)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)setImage:(UIImage*)image {
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   if (image != _image) {
     [_image release];
     _image = [image retain];
@@ -92,8 +93,13 @@ TT_FIX_CATEGORY_BUG(TTImageViewInternal)
       if ([_delegate respondsToSelector:@selector(imageView:didLoadImage:)]) {
         [_delegate imageView:self didLoadImage:image];
       }
+      if (self.linkedImageView) {
+        self.linkedImageView.image = image;
+        self.linkedImageView = nil;
+      }
     }
   }
+  [pool drain];
 }
 
 

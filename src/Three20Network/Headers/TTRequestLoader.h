@@ -56,6 +56,7 @@
    * When load requests fail we'll attempt the request again, as many as 2 times by default.
    */
   int                     _retriesLeft;
+  NSTimeInterval          _startTime;
 }
 
 /**

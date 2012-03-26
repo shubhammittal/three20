@@ -64,7 +64,7 @@
 	UIImage* image = nil;
 	if(!(request.cachePolicy | TTURLRequestCachePolicyNoCache)) {
       image = [[TTURLCache sharedCache] imageForURL:request.urlPath fromDisk:NO];
-  }
+    }
     if (nil == image) {
       image = [UIImage imageWithData:data];
     }

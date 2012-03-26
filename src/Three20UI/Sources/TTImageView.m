@@ -48,6 +48,8 @@
 
 @synthesize delegate = _delegate;
 
+@synthesize priority        = _priority;
+@synthesize linkedImageView = _linkedImageView;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)initWithFrame:(CGRect)frame {
@@ -63,10 +65,12 @@
 - (void)dealloc {
   _delegate = nil;
   [_request cancel];
+  [_request.delegates removeObject:self];
   TT_RELEASE_SAFELY(_request);
   TT_RELEASE_SAFELY(_urlPath);
   TT_RELEASE_SAFELY(_image);
   TT_RELEASE_SAFELY(_defaultImage);
+  TT_RELEASE_SAFELY(_linkedImageView);
   [super dealloc];
 }
 
@@ -131,12 +135,14 @@
   TTURLImageResponse* response = request.response;
   [self setImage:response.image];
 
+  [_request.delegates removeObject:self];
   TT_RELEASE_SAFELY(_request);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)request:(TTURLRequest*)request didFailLoadWithError:(NSError*)error {
+  [_request.delegates removeObject:self];
   TT_RELEASE_SAFELY(_request);
 
   [self imageViewDidFailLoadWithError:error];
@@ -148,6 +154,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)requestDidCancelLoad:(TTURLRequest*)request {
+  [_request.delegates removeObject:self];
   TT_RELEASE_SAFELY(_request);
 
   [self imageViewDidFailLoadWithError:nil];
@@ -229,6 +236,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)stopLoading {
   [_request cancel];
+  [_request.delegates removeObject:self];
+  [self requestDidCancelLoad:_request];
 }
 
 

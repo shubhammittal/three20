@@ -275,6 +275,7 @@
 - (void)setHidesCaption:(BOOL)hidesCaption {
   _hidesCaption = hidesCaption;
   _captionLabel.alpha = hidesCaption ? 0 : 1;
+  [self bringSubviewToFront:_captionLabel];
 }
 
 

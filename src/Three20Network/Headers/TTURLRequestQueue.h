@@ -27,6 +27,7 @@
   NSTimer*              _loaderQueueTimer;
 
   NSInteger             _totalLoading;
+  NSInteger             _maxConcurrentLoads;
 
   NSUInteger            _maxContentLength;
   NSString*             _userAgent;
@@ -37,6 +38,12 @@
 
   BOOL                  _suspended;
 }
+
+@property (nonatomic) int maxConcurrentLoads;
+/**
+ * Configurable timer delay in checking for pending requests
+ */
+@property (nonatomic) NSTimeInterval flushDelay;
 
 /**
  * Gets the flag that determines if new load requests are allowed to reach the network.
@@ -85,6 +92,12 @@
  * @see TTURLRequest::timeoutInterval
  */
 @property (nonatomic) NSTimeInterval defaultTimeout;
+
+/**
+ * Following are for natwork status monitoring
+ */
+@property (nonatomic, readonly) int connectionsAllowed, connectionsLoading, connectionsQueued;
+
 
 /**
  * Get the shared cache singleton used across the application.

@@ -33,9 +33,7 @@
 #import "Three20Core/TTDebugFlags.h"
 #import "Three20Core/TTDebug.h"
 
-static const NSTimeInterval kFlushDelay = 0.3;
-static const NSTimeInterval kTimeout = 300.0;
-static const NSInteger kMaxConcurrentLoads = 5;
+static const NSTimeInterval kTimeout = 60.0;
 static NSUInteger kDefaultMaxContentLength = 150000;
 
 static TTURLRequestQueue* gMainQueue = nil;
@@ -46,6 +44,8 @@ static TTURLRequestQueue* gMainQueue = nil;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 @implementation TTURLRequestQueue
 
+@synthesize maxConcurrentLoads      = _maxConcurrentLoads;
+@synthesize flushDelay              = _flushDelay;
 @synthesize maxContentLength        = _maxContentLength;
 @synthesize userAgent               = _userAgent;
 @synthesize suspended               = _suspended;
@@ -70,6 +70,20 @@ static TTURLRequestQueue* gMainQueue = nil;
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (int)connectionsLoading {
+  return _totalLoading;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (int)connectionsAllowed {
+  return _maxConcurrentLoads;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (int)connectionsQueued {
+  return _loaderQueue.count;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)init {
@@ -80,6 +94,8 @@ static TTURLRequestQueue* gMainQueue = nil;
     _maxContentLength = kDefaultMaxContentLength;
     _imageCompressionQuality = 0.75;
     _defaultTimeout = kTimeout;
+    _maxConcurrentLoads = 10;
+    _flushDelay = 1;
   }
   return self;
 }
@@ -295,7 +311,7 @@ static TTURLRequestQueue* gMainQueue = nil;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)loadNextInQueueDelayed {
   if (!_loaderQueueTimer) {
-    _loaderQueueTimer = [NSTimer scheduledTimerWithTimeInterval:kFlushDelay target:self
+    _loaderQueueTimer = [NSTimer scheduledTimerWithTimeInterval:_flushDelay target:self
       selector:@selector(loadNextInQueue) userInfo:nil repeats:NO];
   }
 }
@@ -306,7 +322,7 @@ static TTURLRequestQueue* gMainQueue = nil;
   _loaderQueueTimer = nil;
 
   for (int i = 0;
-       i < kMaxConcurrentLoads && _totalLoading < kMaxConcurrentLoads
+       i < _maxConcurrentLoads && _totalLoading < _maxConcurrentLoads
        && _loaderQueue.count;
        ++i) {
     TTRequestLoader* loader = [[_loaderQueue objectAtIndex:0] retain];
@@ -384,10 +400,19 @@ static TTURLRequestQueue* gMainQueue = nil;
   // Finally, create a new loader and hit the network (unless we are suspended)
   loader = [[TTRequestLoader alloc] initForRequest:request queue:self];
   [_loaders setObject:loader forKey:request.cacheKey];
-  if (_suspended || _totalLoading == kMaxConcurrentLoads) {
-    [_loaderQueue addObject:loader];
-
-  } else {
+  if (_suspended || _totalLoading == _maxConcurrentLoads) {
+    int index = 0;
+    while (index < _loaderQueue.count) {
+      TTRequestLoader *curLoader = [_loaderQueue objectAtIndex:index];
+      if (curLoader.requests.count > 0 &&
+          request.priority > [[curLoader.requests objectAtIndex:0] priority]) {
+        break;
+      }
+      ++index;
+    }
+    [_loaderQueue insertObject:loader atIndex:index];
+  }
+  else {
     ++_totalLoading;
     [loader load:[NSURL URLWithString:request.urlPath]];
   }
@@ -692,11 +717,11 @@ static TTURLRequestQueue* gMainQueue = nil;
 - (void)loaderDidCancel:(TTRequestLoader*)loader wasLoading:(BOOL)wasLoading {
   if (wasLoading) {
     [self removeLoader:loader];
-    [self loadNextInQueue];
 
   } else {
     [_loaders removeObjectForKey:loader.cacheKey];
   }
+  [self loadNextInQueue];
 }
 
 

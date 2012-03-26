@@ -33,6 +33,12 @@ extern const NSTimeInterval TTURLRequestUseQueueTimeout;
 @protocol TTURLRequestDelegate;
 @protocol TTURLResponse;
 
+enum {
+  TTRequestPriorityLow = 0,
+  TTRequestPriorityMedium = 5,
+  TTRequestPriorityHigh = 10
+};
+
 /**
  * The Three20 network request object, built to work with the Three20 cache and co.
  *
@@ -67,6 +73,7 @@ extern const NSTimeInterval TTURLRequestUseQueueTimeout;
 
   NSInteger             _totalBytesDownloaded;
   NSInteger             _totalContentLength;
+  NSInteger             _priority;
 
   id    _userInfo;
 
@@ -263,6 +270,11 @@ extern const NSTimeInterval TTURLRequestUseQueueTimeout;
  */
 @property (nonatomic, assign) BOOL multiPartForm;
 
+/**
+ * Priority of the request, used to determine where the request goes, if waiting in the loader queue.
+ */
+@property (nonatomic) NSInteger priority;
+
 + (TTURLRequest*)request;
 
 + (TTURLRequest*)requestWithURL:(NSString*)URL delegate:(id /*<TTURLRequestDelegate>*/)delegate;
@@ -273,8 +285,21 @@ extern const NSTimeInterval TTURLRequestUseQueueTimeout;
 
 /**
  * Add a file whose data will be posted.
+ * @param data the file data to be posted
+ * @param mimeType the mime type of the file
+ * @param fileName the file name
  */
 - (void)addFile:(NSData*)data mimeType:(NSString*)mimeType fileName:(NSString*)fileName;
+
+/**
+  * Add a file whose data will be posted.
+  * @param data the file data to be posted
+  * @param name the request parameter name
+  * @param mimeType the mimeType of the file
+  * @param fileName the file name
+  */
+- (void)addFile:(NSData*)data name:(NSString*)name mimeType:(NSString*)mimeType
+       fileName:(NSString*)fileName;
 
 /**
  * Attempt to send a request.

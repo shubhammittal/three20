@@ -45,6 +45,8 @@
 
 - (id)invoke:(id)target withURL:(NSURL*)URL query:(NSDictionary*)query;
 
+- (BOOL)instantiatesClass;
+
 /**
  * either instantiates an object or delegates object creation
  * depending on current configuration

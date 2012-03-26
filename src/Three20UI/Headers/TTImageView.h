@@ -19,6 +19,7 @@
 
 // Network
 #import "Three20Network/TTURLRequestDelegate.h"
+#import "Three20Network/TTURLRequest.h"
 
 @class TTURLRequest;
 @protocol TTImageViewDelegate;
@@ -32,6 +33,11 @@
   UIImage*      _image;
   UIImage*      _defaultImage;
   BOOL          _autoresizesToImage;
+  NSInteger     _priority;
+  UIImageView*  _linkedImageView;
+
+  // this is just to be able to load lower quality images if present without causing race condition
+  BOOL          _bestImageLoaded;
 
   id<TTImageViewDelegate> _delegate;
 }
@@ -77,9 +83,19 @@
 @property (nonatomic, assign) id<TTImageViewDelegate> delegate;
 
 /**
+ * Priority that needs to be set for the request.
+ */
+@property (nonatomic) NSInteger priority;
+
+/**
  * The TTURLRequest requester used to load this image.
  */
 @property (nonatomic, readonly) TTURLRequest* request;
+
+/**
+ * An image view which will be loaded when this guy's image gets loaded.
+ */
+@property (nonatomic, retain) UIImageView *linkedImageView;
 
 /**
  * Cancel any pending request, remove the image, and redraw the view.

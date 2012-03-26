@@ -24,7 +24,7 @@
   NSData* _data;
 }
 
-@property (nonatomic, readonly) NSData* data;
+@property (nonatomic, retain) NSData* data;
 
 @end
 
