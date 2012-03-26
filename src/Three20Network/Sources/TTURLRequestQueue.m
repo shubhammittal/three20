@@ -450,11 +450,11 @@ static TTURLRequestQueue* gMainQueue = nil;
   TTRequestLoader* loader = [[TTRequestLoader alloc] initForRequest:request queue:self];
 
   // Should be decremented eventually by loadSynchronously
-  ++_totalLoading;
+  // ++_totalLoading;
 
   [loader loadSynchronously:[NSURL URLWithString:request.urlPath]];
   TT_RELEASE_SAFELY(loader);
-
+  ++_totalLoading;
   return NO;
 }
 
