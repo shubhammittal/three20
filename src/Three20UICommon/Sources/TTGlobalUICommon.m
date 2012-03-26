@@ -203,6 +203,8 @@ NSString* TTDeviceModelName() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 BOOL TTIsSupportedOrientation(UIInterfaceOrientation orientation) {
+  return (orientation == UIInterfaceOrientationPortrait);
+
   if (TTIsPad()) {
     return YES;
 

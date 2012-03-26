@@ -49,4 +49,8 @@
  */
 - (NSString*)URLForVersion:(TTPhotoVersion)version;
 
+@optional
+
+- (UIView*)locationLabel;
+
 @end

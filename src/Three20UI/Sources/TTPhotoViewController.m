@@ -203,6 +203,21 @@ static const NSInteger kActivityLabelTag          = 96;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)updateLocationLabel {
+  for (UIView *sub in _locationLabel.subviews) {
+    [sub removeFromSuperview];
+  }
+  if ([[_photoSource photoAtIndex:_centerPhotoIndex] respondsToSelector:@selector(locationLabel)]) {
+    UIView *v = [[_photoSource photoAtIndex:_centerPhotoIndex] locationLabel];
+    [_locationLabel addSubview:v];
+    CGRect fr = _locationLabel.frame;
+    fr.origin.y += fr.size.height - v.size.height;
+    fr.size.height -= fr.size.height - v.size.height;
+    _locationLabel.frame = fr;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)updateChrome {
   if (_photoSource.numberOfPhotos < 2) {
     self.title = _photoSource.title;
@@ -235,6 +250,8 @@ static const NSInteger kActivityLabelTag          = 96;
   playButton.enabled = _photoSource.numberOfPhotos > 1;
   _previousButton.enabled = _centerPhotoIndex > 0;
   _nextButton.enabled = _centerPhotoIndex >= 0 && _centerPhotoIndex < _photoSource.numberOfPhotos-1;
+
+  [self updateLocationLabel];
 }
 
 
@@ -473,10 +490,83 @@ static const NSInteger kActivityLabelTag          = 96;
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)commentAction {
+    if ([_centerPhoto respondsToSelector:@selector(postId)]) {
+        NSString *url = [NSString stringWithFormat:@"tt://post/%@/%@",
+                         [_centerPhoto performSelector:@selector(postId)],
+                         [_centerPhoto performSelector:@selector(campusId)]];
+        [[TTNavigator navigator] openURLAction:
+		 [[TTURLAction actionWithURLPath:url] applyAnimated:YES]];
+
+        [NSTimer scheduledTimerWithTimeInterval:0.1
+										 target:self
+									   selector:@selector(changeBar:)
+									   userInfo:nil
+										repeats:NO];
+
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)shareAction {
+    if ([_centerPhoto respondsToSelector:@selector(share)]) {
+		[_centerPhoto performSelector:@selector(share) withObject:nil];
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)hideCommentButton {
+    _hideComment = YES;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)hideShareButton {
+    _hideShare = YES;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)enableShareButton:(BOOL)enabled {
+    _shareButton.enabled = enabled;
+	_disableShare = !enabled;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)showAlbumLoading:(BOOL)show {
+	if (!show) {
+		[[_innerView viewWithTag:821] removeFromSuperview];
+	}
+	else {
+		if (_innerView) {
+			UIActivityIndicatorView *av = [[UIActivityIndicatorView alloc]
+										   initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+			av.center = _toolbar.center;
+			av.tag = 821;
+			[av startAnimating];
+			[_innerView insertSubview:av aboveSubview:_toolbar];
+			[av release];
+		}
+	}
+	_albumLoading = show;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)hideBarsAnimated {
+	if (self.navigationController) {
+		[self showBars:NO animated:YES];
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)changeBar:(NSTimer *)timer {
+    [[[[[TTNavigator navigator] topViewController] navigationController] navigationBar]
+	 setBarStyle:UIBarStyleDefault];
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)showBarsAnimationDidStop {
-  self.navigationController.navigationBarHidden = NO;
+  self.navigationController.navigationBarHidden = YES;
 }
 
 
@@ -522,6 +612,24 @@ static const NSInteger kActivityLabelTag          = 96;
                                      style:UIBarButtonItemStylePlain
                                     target:self
                                     action:@selector(previousAction)];
+  if (!_hideComment) {
+    NSString *file = [[NSBundle mainBundle] pathForResource:@"full_screen_comment" ofType:@"png"];
+    _commentButton = [[UIBarButtonItem alloc]
+                      initWithImage:[UIImage imageWithContentsOfFile:file]
+					  style:UIBarButtonItemStylePlain
+					  target:self
+					  action:@selector(commentAction)];
+  }
+
+  if (!_hideShare) {
+    NSString *file = [[NSBundle mainBundle] pathForResource:@"full_screen_options" ofType:@"png"];
+    _shareButton = [[UIBarButtonItem alloc]
+				    initWithImage:[UIImage imageWithContentsOfFile:file]
+					style:UIBarButtonItemStylePlain
+					target:self
+					action:@selector(shareAction)];
+    _shareButton.enabled = !_disableShare;
+  }
 
   UIBarButtonItem* playButton =
     [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPlay
@@ -542,11 +650,41 @@ static const NSInteger kActivityLabelTag          = 96;
 
   _toolbar.barStyle = self.navigationBarStyle;
   _toolbar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleTopMargin;
-  _toolbar.items = [NSArray arrayWithObjects:
-                    space, _previousButton, space, _nextButton, space, nil];
+  if (!_hideComment && !_hideShare) {
+    _toolbar.items = [NSArray arrayWithObjects:
+	  				  _shareButton,space,_previousButton,space,_nextButton,space,_commentButton,nil];
+  }
+  else if (!_hideComment) {
+    _toolbar.items = [NSArray arrayWithObjects:
+                      space,_previousButton,space,_nextButton,space,_commentButton,nil];
+  }
+  else if (!_hideShare) {
+    _toolbar.items = [NSArray arrayWithObjects:
+                      _shareButton,space,_previousButton,space,_nextButton,space,nil];
+  }
+  else {
+	_toolbar.items = [NSArray arrayWithObjects:
+					  space,_previousButton,space,_nextButton,space,nil];
+  }
   [_innerView addSubview:_toolbar];
-}
 
+  if (_albumLoading) {
+    UIActivityIndicatorView *av = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:
+								   UIActivityIndicatorViewStyleWhite];
+    av.center = _toolbar.center;
+    av.tag = 821;
+    [av startAnimating];
+    [_innerView insertSubview:av aboveSubview:_toolbar];
+    [av release];
+  }
+
+  _locationLabel = [[UIView alloc] initWithFrame:
+                    CGRectMake(0, screenFrame.size.height - TT_ROW_HEIGHT - 40,
+                               screenFrame.size.width, 40)];
+  _locationLabel.backgroundColor = [UIColor clearColor];
+  [_innerView addSubview:_locationLabel];
+  _locationLabel.alpha = _toolbar.alpha;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)viewDidUnload {
@@ -558,7 +696,10 @@ static const NSInteger kActivityLabelTag          = 96;
   TT_RELEASE_SAFELY(_photoStatusView);
   TT_RELEASE_SAFELY(_nextButton);
   TT_RELEASE_SAFELY(_previousButton);
+  TT_RELEASE_SAFELY(_locationLabel);
   TT_RELEASE_SAFELY(_toolbar);
+  TT_RELEASE_SAFELY(_commentButton);
+  TT_RELEASE_SAFELY(_shareButton);
 }
 
 
@@ -566,6 +707,7 @@ static const NSInteger kActivityLabelTag          = 96;
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
   [self updateToolbarWithOrientation:self.interfaceOrientation];
+  [self updateLocationLabel];
 }
 
 
@@ -608,8 +750,77 @@ static const NSInteger kActivityLabelTag          = 96;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)forceShowBars:(BOOL)animated {
+    animated = NO;
+#ifdef __IPHONE_3_2
+	if ([[UIApplication sharedApplication]
+         respondsToSelector:@selector(setStatusBarHidden:withAnimation:)])
+		[[UIApplication sharedApplication] setStatusBarHidden:false
+                                                withAnimation:(animated
+                                                               ? UIStatusBarAnimationFade
+                                                               : UIStatusBarAnimationNone)];
+	else
+#endif
+		[[UIApplication sharedApplication] setStatusBarHidden:false animated:animated];
+
+    if (animated) {
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:TT_TRANSITION_DURATION];
+    }
+    self.navigationController.navigationBar.alpha = 1;
+    if (animated) {
+        [UIView commitAnimations];
+    }
+
+    CGFloat alpha = 1;
+    if (alpha == _toolbar.alpha)
+        return;
+
+    if (animated) {
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:TT_TRANSITION_DURATION];
+        [UIView setAnimationDelegate:self];
+        [UIView setAnimationDidStopSelector:@selector(showBarsAnimationDidStop)];
+
+    } else {
+        self.navigationController.navigationBarHidden = NO;
+    }
+
+    [self showCaptions:true];
+
+    _toolbar.alpha = alpha;
+    _locationLabel.alpha = _toolbar.alpha;
+
+    if (animated) {
+        [UIView commitAnimations];
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)showBars:(BOOL)show animated:(BOOL)animated {
-  [super showBars:show animated:animated];
+  //[super showBars:show animated:animated];
+    show = NO;
+
+#ifdef __IPHONE_3_2
+	if ([[UIApplication sharedApplication]
+         respondsToSelector:@selector(setStatusBarHidden:withAnimation:)])
+		[[UIApplication sharedApplication] setStatusBarHidden:true
+                                                withAnimation:(animated
+                                                               ? UIStatusBarAnimationFade
+                                                               : UIStatusBarAnimationNone)];
+	else
+#endif
+		[[UIApplication sharedApplication] setStatusBarHidden:true animated:animated];
+
+    if (animated) {
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:TT_TRANSITION_DURATION];
+    }
+    self.navigationController.navigationBar.alpha = 0;
+    if (animated) {
+        [UIView commitAnimations];
+    }
 
   CGFloat alpha = show ? 1 : 0;
   if (alpha == _toolbar.alpha)
@@ -638,6 +849,7 @@ static const NSInteger kActivityLabelTag          = 96;
   [self showCaptions:show];
 
   _toolbar.alpha = alpha;
+  _locationLabel.alpha = _toolbar.alpha;
 
   if (animated) {
     [UIView commitAnimations];

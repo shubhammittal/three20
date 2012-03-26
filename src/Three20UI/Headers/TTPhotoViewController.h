@@ -37,9 +37,12 @@
   TTScrollView*     _scrollView;
   TTPhotoView*      _photoStatusView;
 
+  UIView*           _locationLabel;
   UIToolbar*        _toolbar;
   UIBarButtonItem*  _nextButton;
   UIBarButtonItem*  _previousButton;
+  UIBarButtonItem*  _commentButton;
+  UIBarButtonItem*  _shareButton;
 
   TTStyle*          _captionStyle;
 
@@ -51,6 +54,9 @@
   NSTimer*          _loadTimer;
 
   BOOL              _delayLoad;
+  BOOL              _hideComment;
+  BOOL              _hideShare, _disableShare;
+  BOOL              _albumLoading;
 
   TTThumbsViewController* _thumbsController;
 
@@ -113,5 +119,12 @@
  * Shows or hides an activity label on top of the photo.
  */
 - (void)showActivity:(NSString*)title;
+- (void)hideCommentButton;
+- (void)hideShareButton;
+- (void)enableShareButton:(BOOL)enabled;
+- (void)showAlbumLoading:(BOOL)show;
+- (void)hideBarsAnimated;
+
+- (void)forceShowBars:(BOOL)animated;
 
 @end
