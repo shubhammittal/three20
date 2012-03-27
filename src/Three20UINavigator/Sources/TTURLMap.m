@@ -369,7 +369,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)setObject:(id)object forURL:(NSString*)URL {
   if (nil == _objectMappings) {
-    _objectMappings = TTCreateNonRetainingDictionary();
+    _objectMappings = [[NSMutableDictionary alloc] initWithCapacity:8];
   }
   // XXXjoe Normalize the URL first
   [_objectMappings setObject:object forKey:URL];
@@ -407,7 +407,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)removeAllObjects {
-  TT_RELEASE_SAFELY(_objectMappings);
+    NSArray *keys = _objectMappings.allKeys;
+    for (NSString *url in keys) {
+        TTURLNavigatorPattern* pattern  = [self matchObjectPattern:[NSURL URLWithString:url]];
+        if ([pattern instantiatesClass]) {
+            [_objectMappings removeObjectForKey:url];
+        }
+    }
 }
 
 
