@@ -35,6 +35,7 @@
   CGFloat               _imageCompressionQuality;
   
   NSTimeInterval        _defaultTimeout;
+  NSTimeInterval        _flushDelay;
 
   BOOL                  _suspended;
 }

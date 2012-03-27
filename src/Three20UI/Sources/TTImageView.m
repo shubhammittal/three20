@@ -235,8 +235,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)stopLoading {
-  [_request cancel];
   [_request.delegates removeObject:self];
+  [_request cancel];
   [self requestDidCancelLoad:_request];
 }
 
