@@ -369,6 +369,11 @@ static NSMutableDictionary* gNamedCaches = nil;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+- (BOOL)hasDataForKey:(NSString*)key {
+  return [self hasDataForKey:key expires:TT_CACHE_EXPIRATION_AGE_NEVER];
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 - (BOOL)hasDataForKey:(NSString*)key expires:(NSTimeInterval)expirationAge {
   NSString* filePath = [self cachePathForKey:key];
   NSFileManager* fm = [NSFileManager defaultManager];
@@ -383,6 +388,12 @@ static NSMutableDictionary* gNamedCaches = nil;
   }
 
   return NO;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (NSData*)dataForKey:(NSString*)key {
+  return [self dataForKey:key expires:TT_CACHE_EXPIRATION_AGE_NEVER timestamp:nil];
 }
 
 

@@ -116,6 +116,7 @@
  * Determines if there is a cache entry for a URL.
  */
 - (BOOL)hasDataForURL:(NSString*)URL;
+- (BOOL)hasDataForKey:(NSString*)key;
 
 /**
  * Determines if there is a cache entry for a key.
@@ -133,6 +134,7 @@
  * @return nil if the URL is not cached.
  */
 - (NSData*)dataForURL:(NSString*)URL;
+- (NSData*)dataForKey:(NSString*)key;
 
 /**
  * Gets the data for a URL from the cache if it exists and is newer than a minimum timestamp.
