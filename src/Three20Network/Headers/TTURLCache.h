@@ -116,11 +116,12 @@
  * Determines if there is a cache entry for a URL.
  */
 - (BOOL)hasDataForURL:(NSString*)URL;
-- (BOOL)hasDataForKey:(NSString*)key;
+- (BOOL)hasDataForURL:(NSString*)URL expires:(NSTimeInterval)expirationAge;
 
 /**
  * Determines if there is a cache entry for a key.
  */
+- (BOOL)hasDataForKey:(NSString*)key;
 - (BOOL)hasDataForKey:(NSString*)key expires:(NSTimeInterval)expirationAge;
 
 /**
