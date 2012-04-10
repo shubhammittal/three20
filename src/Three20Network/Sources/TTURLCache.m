@@ -353,7 +353,7 @@ static NSMutableDictionary* gNamedCaches = nil;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (BOOL)hasDataForURL:(NSString *)URL expires:(NSTimeInterval)expirationAge {
-  return [self hasDataForKey:[self cachePathForURL:URL] expires:expirationAge];
+  return [self hasDataForKey:[self keyForURL:URL] expires:expirationAge];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

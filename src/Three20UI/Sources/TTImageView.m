@@ -64,9 +64,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)dealloc {
   _delegate = nil;
-  [_request cancel];
-  [_request.delegates removeObject:self];
-  TT_RELEASE_SAFELY(_request);
+  [self stopLoading];
   TT_RELEASE_SAFELY(_urlPath);
   TT_RELEASE_SAFELY(_image);
   TT_RELEASE_SAFELY(_defaultImage);
@@ -119,10 +117,17 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)requestDidStartLoad:(TTURLRequest*)request {
-  [_request release];
-  _request = [request retain];
+- (void)resetRequest {
+  if (_request) {
+    [_request releaseDelegate];
+    _request = nil;
+  }
+}
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)requestDidStartLoad:(TTURLRequest*)request {
+  _request = request;
   [self imageViewDidStartLoad];
   if ([_delegate respondsToSelector:@selector(imageViewDidStartLoad:)]) {
     [_delegate imageViewDidStartLoad:self];
@@ -134,17 +139,13 @@
 - (void)requestDidFinishLoad:(TTURLRequest*)request {
   TTURLImageResponse* response = request.response;
   [self setImage:response.image];
-
-  [_request.delegates removeObject:self];
-  TT_RELEASE_SAFELY(_request);
+  [self resetRequest];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)request:(TTURLRequest*)request didFailLoadWithError:(NSError*)error {
-  [_request.delegates removeObject:self];
-  TT_RELEASE_SAFELY(_request);
-
+  [self resetRequest];
   [self imageViewDidFailLoadWithError:error];
   if ([_delegate respondsToSelector:@selector(imageView:didFailLoadWithError:)]) {
     [_delegate imageView:self didFailLoadWithError:error];
@@ -154,9 +155,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)requestDidCancelLoad:(TTURLRequest*)request {
-  [_request.delegates removeObject:self];
-  TT_RELEASE_SAFELY(_request);
-
+  [self resetRequest];
   [self imageViewDidFailLoadWithError:nil];
   if ([_delegate respondsToSelector:@selector(imageView:didFailLoadWithError:)]) {
     [_delegate imageView:self didFailLoadWithError:nil];
@@ -207,7 +206,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)reload {
-  if (nil == _request && nil != _urlPath) {
+  if (!self.isLoading && nil != _urlPath) {
     UIImage* image = [[TTURLCache sharedCache] imageForURL:_urlPath];
 
     if (nil != image) {
@@ -235,9 +234,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)stopLoading {
-  [_request.delegates removeObject:self];
-  [_request cancel];
-  [self requestDidCancelLoad:_request];
+  TTURLRequest *request = _request;
+  [self requestDidCancelLoad:request];
+  [request cancel];
 }
 
 

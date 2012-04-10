@@ -114,6 +114,12 @@
 - (void)stopLoading;
 
 /**
+ * Resets the request object, by removing its delegate.
+ */
+- (void)resetRequest;
+
+
+/**
  * Called when the image begins loading asynchronously.
  * Overridable method.
  *

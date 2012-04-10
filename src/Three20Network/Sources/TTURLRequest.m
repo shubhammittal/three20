@@ -69,7 +69,7 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 @synthesize filterPasswordLogging = _filterPasswordLogging;
 @synthesize multiPartForm         = _multiPartForm;
 
-@synthesize delegates             = _delegates;
+@synthesize delegate              = _delegate;
 @synthesize priority              = _priority;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,9 +89,7 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 	self = [self init];
   if (self) {
     _urlPath = [URL retain];
-    if (nil != delegate) {
-      [_delegates addObject:delegate];
-    }
+    _delegate = delegate;
   }
   return self;
 }
@@ -101,7 +99,6 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 - (id)init {
 	self = [super init];
   if (self) {
-    _delegates = TTCreateNonRetainingArray();
     _cachePolicy = TTURLRequestCachePolicyDefault;
     _cacheExpirationAge = TT_DEFAULT_CACHE_EXPIRATION_AGE;
     _shouldHandleCookies = YES;
@@ -126,7 +123,7 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
   TT_RELEASE_SAFELY(_userInfo);
   TT_RELEASE_SAFELY(_timestamp);
   TT_RELEASE_SAFELY(_files);
-  TT_RELEASE_SAFELY(_delegates);
+  [self releaseDelegate];
 
   [super dealloc];
 }
@@ -396,6 +393,20 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
   return [[TTURLRequestQueue mainQueue] createNSURLRequest:self URL:nil];
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)retainDelegate {
+  [_delegate retain];
+  _delegateRetained = YES;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)releaseDelegate {
+  if (_delegateRetained) {
+    [_delegate release];
+    _delegateRetained = NO;
+  }
+  _delegate = nil;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

@@ -36,7 +36,8 @@ extern const NSTimeInterval TTURLRequestUseQueueTimeout;
 enum {
   TTRequestPriorityLow = 0,
   TTRequestPriorityMedium = 5,
-  TTRequestPriorityHigh = 10
+  TTRequestPriorityHigh = 10,
+  TTRequestPrioritySyncCacheRead = 100
 };
 
 /**
@@ -83,7 +84,8 @@ enum {
   BOOL  _filterPasswordLogging;
   BOOL  _multiPartForm;
 
-  NSMutableArray* _delegates;
+  id    _delegate;
+  BOOL  _delegateRetained;
 }
 
 /**
@@ -262,7 +264,7 @@ enum {
 /**
  * An array of non-retained objects that receive messages about the progress of the request.
  */
-@property (nonatomic, readonly) NSMutableArray* delegates;
+@property (nonatomic, readonly) id delegate;
 
 /**
  * Determine whether to construct a multipart form or to instead encode the http body as the W3C default
@@ -330,5 +332,12 @@ enum {
 - (void)cancel;
 
 - (NSURLRequest*)createNSURLRequest;
+
+/**
+ * Methods to manage delegates which have to be retained
+ */
+- (void)retainDelegate;
+
+- (void)releaseDelegate;
 
 @end

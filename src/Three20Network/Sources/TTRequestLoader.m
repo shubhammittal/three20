@@ -147,10 +147,8 @@ static const NSInteger kLoadMaxRetries = 2;
     request.totalBytesLoaded = bytesLoaded;
     request.totalBytesExpected = bytesExpected;
 
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(requestDidUploadData:)]) {
-        [delegate requestDidUploadData:request];
-      }
+    if ([request.delegate respondsToSelector:@selector(requestDidUploadData:)]) {
+      [request.delegate requestDidUploadData:request];
     }
   }
 }
@@ -229,10 +227,8 @@ static const NSInteger kLoadMaxRetries = 2;
   if (requestIndex != NSNotFound) {
     request.isLoading = NO;
 
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(requestDidCancelLoad:)]) {
-        [delegate requestDidCancelLoad:request];
-      }
+    if ([request.delegate respondsToSelector:@selector(requestDidCancelLoad:)]) {
+      [request.delegate requestDidCancelLoad:request];
     }
 
     [_requests removeObjectAtIndex:requestIndex];
@@ -287,10 +283,8 @@ static const NSInteger kLoadMaxRetries = 2;
   for (TTURLRequest* request in [[_requests copy] autorelease]) {
     request.isLoading = NO;
 
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
-        [delegate request:request didFailLoadWithError:error];
-      }
+    if ([request.delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
+      [request.delegate request:request didFailLoadWithError:error];
     }
   }
 }
@@ -302,10 +296,8 @@ static const NSInteger kLoadMaxRetries = 2;
     request.timestamp = timestamp;
     request.isLoading = NO;
 
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(requestDidFinishLoad:)]) {
-        [delegate requestDidFinishLoad:request];
-      }
+    if ([request.delegate respondsToSelector:@selector(requestDidFinishLoad:)]) {
+      [request.delegate requestDidFinishLoad:request];
     }
   }
 }
@@ -315,10 +307,8 @@ static const NSInteger kLoadMaxRetries = 2;
 - (void)dispatchAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge {
   for (TTURLRequest* request in [[_requests copy] autorelease]) {
 
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(request:didReceiveAuthenticationChallenge:)]) {
-        [delegate request:request didReceiveAuthenticationChallenge:challenge];
-      }
+    if ([request.delegate respondsToSelector:@selector(request:didReceiveAuthenticationChallenge:)]) {
+      [request.delegate request:request didReceiveAuthenticationChallenge:challenge];
     }
   }
 }
@@ -375,9 +365,9 @@ static const NSInteger kLoadMaxRetries = 2;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data {
   [_responseData appendData:data];
-    for (TTURLRequest* request in [[_requests copy] autorelease]) {
-        request.totalBytesDownloaded += [data length];
-    }
+  for (TTURLRequest* request in [[_requests copy] autorelease]) {
+    request.totalBytesDownloaded += [data length];
+  }
 }
 
 

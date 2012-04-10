@@ -253,20 +253,16 @@ static TTURLRequestQueue* gMainQueue = nil;
       }
 
       if (error) {
-        for (id<TTURLRequestDelegate> delegate in request.delegates) {
-          if ([delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
-            [delegate request:request didFailLoadWithError:error];
-          }
+        if ([request.delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
+          [request.delegate request:request didFailLoadWithError:error];
         }
 
       } else {
         request.timestamp = timestamp ? timestamp : [NSDate date];
         request.respondedFromCache = YES;
 
-        for (id<TTURLRequestDelegate> delegate in request.delegates) {
-          if ([delegate respondsToSelector:@selector(requestDidFinishLoad:)]) {
-            [delegate requestDidFinishLoad:request];
-          }
+        if ([request.delegate respondsToSelector:@selector(requestDidFinishLoad:)]) {
+          [request.delegate requestDidFinishLoad:request];
         }
       }
 
@@ -350,9 +346,9 @@ static TTURLRequestQueue* gMainQueue = nil;
   _suspended = isSuspended;
 
   if (!_suspended) {
-    [self loadNextInQueue];
-
-  } else if (_loaderQueueTimer) {
+    [self performSelectorOnMainThread:@selector(loadNextInQueue) withObject:nil waitUntilDone:YES];
+  }
+  else if (_loaderQueueTimer) {
     [_loaderQueueTimer invalidate];
     _loaderQueueTimer = nil;
   }
@@ -365,19 +361,15 @@ static TTURLRequestQueue* gMainQueue = nil;
     return YES;
   }
 
-  for (id<TTURLRequestDelegate> delegate in request.delegates) {
-    if ([delegate respondsToSelector:@selector(requestDidStartLoad:)]) {
-      [delegate requestDidStartLoad:request];
-    }
+  if ([request.delegate respondsToSelector:@selector(requestDidStartLoad:)]) {
+    [request.delegate requestDidStartLoad:request];
   }
 
   // If the url is empty, fail.
   if (!request.urlPath.length) {
     NSError* error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorBadURL userInfo:nil];
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
-        [delegate request:request didFailLoadWithError:error];
-      }
+    if ([request.delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
+      [request.delegate request:request didFailLoadWithError:error];
     }
     return NO;
   }
@@ -421,25 +413,20 @@ static TTURLRequestQueue* gMainQueue = nil;
   return NO;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (BOOL)sendSynchronousRequest:(TTURLRequest*)request {
   if ([self loadRequestFromCache:request]) {
     return YES;
   }
 
-  for (id<TTURLRequestDelegate> delegate in request.delegates) {
-    if ([delegate respondsToSelector:@selector(requestDidStartLoad:)]) {
-      [delegate requestDidStartLoad:request];
-    }
+  if ([request.delegate respondsToSelector:@selector(requestDidStartLoad:)]) {
+    [request.delegate requestDidStartLoad:request];
   }
 
   if (!request.urlPath.length) {
     NSError* error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorBadURL userInfo:nil];
-    for (id<TTURLRequestDelegate> delegate in request.delegates) {
-      if ([delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
-        [delegate request:request didFailLoadWithError:error];
-      }
+    if ([request.delegate respondsToSelector:@selector(request:didFailLoadWithError:)]) {
+      [request.delegate request:request didFailLoadWithError:error];
     }
     return NO;
   }
@@ -480,14 +467,12 @@ static TTURLRequestQueue* gMainQueue = nil;
 
   for (TTRequestLoader* loader in [_loaders objectEnumerator]) {
     for (TTURLRequest* request in loader.requests) {
-      for (id<TTURLRequestDelegate> requestDelegate in request.delegates) {
-        if (delegate == requestDelegate) {
-          if (!requestsToCancel) {
-            requestsToCancel = [NSMutableArray array];
-          }
-          [requestsToCancel addObject:request];
-          break;
+      if (delegate == request.delegate) {
+        if (!requestsToCancel) {
+          requestsToCancel = [NSMutableArray array];
         }
+        [requestsToCancel addObject:request];
+        break;
       }
 
       if ([request.userInfo isKindOfClass:[TTUserInfo class]]) {
@@ -596,7 +581,7 @@ static TTURLRequestQueue* gMainQueue = nil;
     didLoadResponse: (NSHTTPURLResponse*)response
                data: (id)data {
   [loader retain];
-  [self removeLoader:loader];
+  [self performSelectorOnMainThread:@selector(removeLoader:) withObject:loader waitUntilDone:YES];
 
   NSError* error = [loader processResponse:response data:data];
   if (error) {
@@ -656,7 +641,7 @@ static TTURLRequestQueue* gMainQueue = nil;
   }
   [loader release];
 
-  [self loadNextInQueue];
+  [self performSelectorOnMainThread:@selector(loadNextInQueue) withObject:nil waitUntilDone:YES];
 }
 
 
@@ -664,7 +649,7 @@ static TTURLRequestQueue* gMainQueue = nil;
 - (void)               loader:(TTRequestLoader*)loader
     didLoadUnmodifiedResponse:(NSHTTPURLResponse*)response {
   [loader retain];
-  [self removeLoader:loader];
+  [self performSelectorOnMainThread:@selector(removeLoader:) withObject:loader waitUntilDone:YES];
 
   NSData* data = nil;
   NSError* error = nil;
@@ -692,7 +677,7 @@ static TTURLRequestQueue* gMainQueue = nil;
 
   [loader release];
 
-  [self loadNextInQueue];
+  [self performSelectorOnMainThread:@selector(loadNextInQueue) withObject:nil waitUntilDone:YES];
 }
 
 
@@ -707,21 +692,20 @@ static TTURLRequestQueue* gMainQueue = nil;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)loader:(TTRequestLoader*)loader didFailLoadWithError:(NSError*)error {
   TTDCONDITIONLOG(TTDFLAG_URLREQUEST, @"ERROR: %@", error);
-  [self removeLoader:loader];
+  [self performSelectorOnMainThread:@selector(removeLoader:) withObject:loader waitUntilDone:YES];
   [loader dispatchError:error];
-  [self loadNextInQueue];
+  [self performSelectorOnMainThread:@selector(loadNextInQueue) withObject:nil waitUntilDone:YES];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)loaderDidCancel:(TTRequestLoader*)loader wasLoading:(BOOL)wasLoading {
   if (wasLoading) {
-    [self removeLoader:loader];
-
+    [self performSelectorOnMainThread:@selector(removeLoader:) withObject:loader waitUntilDone:YES];
   } else {
     [_loaders removeObjectForKey:loader.cacheKey];
   }
-  [self loadNextInQueue];
+  [self performSelectorOnMainThread:@selector(loadNextInQueue) withObject:nil waitUntilDone:YES];
 }
 
 
