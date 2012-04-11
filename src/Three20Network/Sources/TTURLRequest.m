@@ -402,8 +402,8 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)releaseDelegate {
   if (_delegateRetained) {
-    [_delegate release];
     _delegateRetained = NO;
+    [_delegate release];
   }
   _delegate = nil;
 }

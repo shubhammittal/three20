@@ -63,8 +63,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)dealloc {
+  TTURLRequest *request = _request;
+  [self resetRequest];
+  [request cancel];
+
   _delegate = nil;
-  [self stopLoading];
   TT_RELEASE_SAFELY(_urlPath);
   TT_RELEASE_SAFELY(_image);
   TT_RELEASE_SAFELY(_defaultImage);
@@ -119,8 +122,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)resetRequest {
   if (_request) {
-    [_request releaseDelegate];
+    TTURLRequest *request = _request;
     _request = nil;
+    [request releaseDelegate];
   }
 }
 
@@ -147,21 +151,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)request:(TTURLRequest*)request didFailLoadWithError:(NSError*)error {
-  [self resetRequest];
   [self imageViewDidFailLoadWithError:error];
   if ([_delegate respondsToSelector:@selector(imageView:didFailLoadWithError:)]) {
     [_delegate imageView:self didFailLoadWithError:error];
   }
+  [self resetRequest];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)requestDidCancelLoad:(TTURLRequest*)request {
-  [self resetRequest];
   [self imageViewDidFailLoadWithError:nil];
   if ([_delegate respondsToSelector:@selector(imageView:didFailLoadWithError:)]) {
     [_delegate imageView:self didFailLoadWithError:nil];
   }
+  [self resetRequest];
 }
 
 
