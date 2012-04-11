@@ -36,9 +36,6 @@
   NSInteger     _priority;
   UIImageView*  _linkedImageView;
 
-  // this is just to be able to load lower quality images if present without causing race condition
-  BOOL          _bestImageLoaded;
-
   id<TTImageViewDelegate> _delegate;
 }
 

@@ -138,7 +138,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)requestDidFinishLoad:(TTURLRequest*)request {
   TTURLImageResponse* response = request.response;
-  [self setImage:response.image];
+  [self performSelectorOnMainThread:@selector(setImage:)
+                         withObject:response.image
+                      waitUntilDone:YES];
   [self resetRequest];
 }
 
@@ -203,29 +205,38 @@
   return nil != _image && _image != _defaultImage;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (BOOL)loadFromCache {
+  UIImage* image = [[TTURLCache sharedCache] imageForURL:_urlPath];
+  if (image) {
+    self.image = image;
+    return YES;
+  }
+  return NO;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)reload {
   if (!self.isLoading && nil != _urlPath) {
-    UIImage* image = [[TTURLCache sharedCache] imageForURL:_urlPath];
+    if ([self loadFromCache]) return;
 
-    if (nil != image) {
-      self.image = image;
+    TTURLRequest* request = [TTURLRequest requestWithURL:_urlPath delegate:self];
+    [request retainDelegate];
+    request.response = [[[TTURLImageResponse alloc] init] autorelease];
+    request.priority = self.priority;
 
-    } else {
-      TTURLRequest* request = [TTURLRequest requestWithURL:_urlPath delegate:self];
-      request.response = [[[TTURLImageResponse alloc] init] autorelease];
+    // Give the delegate one chance to configure the requester.
+    if ([_delegate respondsToSelector:@selector(imageView:willSendARequest:)]) {
+      [_delegate imageView:self willSendARequest:request];
+    }
 
-      // Give the delegate one chance to configure the requester.
-      if ([_delegate respondsToSelector:@selector(imageView:willSendARequest:)]) {
-    	  [_delegate imageView:self willSendARequest:request];
-      }
-
-      if (![request send]) {
-        // Put the default image in place while waiting for the request to load
-        if (_defaultImage && nil == self.image) {
-          self.image = _defaultImage;
-        }
+    if (![request send]) {
+      // Put the default image in place while waiting for the request to load
+      if (_defaultImage && nil == self.image) {
+        [self performSelectorOnMainThread:@selector(setImage:)
+                               withObject:_defaultImage
+                            waitUntilDone:YES];
       }
     }
   }
