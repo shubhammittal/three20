@@ -635,7 +635,7 @@ static TTURLRequestQueue* gMainQueue = nil;
         }
       }
 
-      [[TTURLCache sharedCache] storeData:data forKey:loader.cacheKey];
+      [[TTURLCache sharedCache] storeData:data forLoader:loader];
     }
     [loader dispatchLoaded:[NSDate date]];
   }

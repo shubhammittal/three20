@@ -249,9 +249,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)stopLoading {
-  TTURLRequest *request = _request;
-  [self requestDidCancelLoad:request];
-  [request cancel];
+  if (_request) {
+    TTURLRequest *request = _request;
+    [self requestDidCancelLoad:request];
+    [request cancel];
+  }
 }
 
 

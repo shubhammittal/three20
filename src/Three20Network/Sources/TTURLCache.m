@@ -18,6 +18,7 @@
 
 // Network
 #import "Three20Network/TTGlobalNetwork.h"
+#import "Three20Network/TTRequestLoader.h"
 
 // Core
 #import "Three20Core/TTCorePreprocessorMacros.h"
@@ -508,19 +509,22 @@ static NSMutableDictionary* gNamedCaches = nil;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)storeData:(NSData*)data forURL:(NSString*)URL {
-  NSString* key = [self keyForURL:URL];
-  [self storeData:data forKey:key];
+- (void)storeData:(NSData*)data forKey:(NSString*)key {
+    if (!_disableDiskCache) {
+        NSString* filePath = [self cachePathForKey:key];
+        NSFileManager* fm = [NSFileManager defaultManager];
+        [fm createFileAtPath:filePath contents:data attributes:nil];
+    }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)storeData:(NSData*)data forLoader:(TTRequestLoader*)loader {
+    [self storeData:data forKey:loader.cacheKey];
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)storeData:(NSData*)data forKey:(NSString*)key {
-  if (!_disableDiskCache) {
-    NSString* filePath = [self cachePathForKey:key];
-    NSFileManager* fm = [NSFileManager defaultManager];
-    [fm createFileAtPath:filePath contents:data attributes:nil];
-  }
+- (void)storeData:(NSData*)data forURL:(NSString*)URL {
+  [self storeData:data forKey:[self keyForURL:URL]];
 }
 
 

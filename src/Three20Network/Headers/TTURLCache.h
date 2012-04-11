@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@class TTURLRequest;
+@class TTURLRequest, TTRequestLoader;
 
 /**
  * A general purpose URL cache for caching data in memory and on disk.
@@ -164,7 +164,7 @@
  * Stores a data on disk.
  */
 - (void)storeData:(NSData*)data forURL:(NSString*)URL;
-- (void)storeData:(NSData*)data forKey:(NSString*)key;
+- (void)storeData:(NSData*)data forLoader:(TTRequestLoader*)loader;
 
 /**
  * Stores an image in the memory cache.
