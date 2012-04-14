@@ -153,9 +153,8 @@ static NSMutableDictionary* gNamedCaches = nil;
 + (BOOL)createPathIfNecessary:(NSString*)path {
   BOOL succeeded = YES;
 
-  NSFileManager* fm = [NSFileManager defaultManager];
-  if (![fm fileExistsAtPath:path]) {
-    succeeded = [fm createDirectoryAtPath: path
+  if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+    succeeded = [[NSFileManager defaultManager] createDirectoryAtPath: path
               withIntermediateDirectories: YES
                                attributes: nil
                                     error: nil];
@@ -242,16 +241,14 @@ static NSMutableDictionary* gNamedCaches = nil;
  */
 - (BOOL)imageExistsFromBundle:(NSString*)URL {
   NSString* path = TTPathForBundleResource([URL substringFromIndex:9]);
-  NSFileManager* fm = [NSFileManager defaultManager];
-  return [fm fileExistsAtPath:path];
+  return [[NSFileManager defaultManager] fileExistsAtPath:path];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (BOOL)imageExistsFromDocuments:(NSString*)URL {
   NSString* path = TTPathForDocumentsResource([URL substringFromIndex:12]);
-  NSFileManager* fm = [NSFileManager defaultManager];
-  return [fm fileExistsAtPath:path];
+  return [[NSFileManager defaultManager] fileExistsAtPath:path];
 }
 
 
@@ -286,13 +283,12 @@ static NSMutableDictionary* gNamedCaches = nil;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (NSString*)createUniqueTemporaryURL {
-  NSFileManager* fm = [NSFileManager defaultManager];
   NSString* tempURL = nil;
   NSString* newPath = nil;
   do {
     tempURL = [self createTemporaryURL];
     newPath = [self cachePathForURL:tempURL];
-  } while ([fm fileExistsAtPath:newPath]);
+  } while ([[NSFileManager defaultManager] fileExistsAtPath:newPath]);
   return tempURL;
 }
 
@@ -510,16 +506,14 @@ static NSMutableDictionary* gNamedCaches = nil;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)storeData:(NSData*)data forKey:(NSString*)key {
-    if (!_disableDiskCache) {
-        NSString* filePath = [self cachePathForKey:key];
-        NSFileManager* fm = [NSFileManager defaultManager];
-        [fm createFileAtPath:filePath contents:data attributes:nil];
-    }
+  if (!_disableDiskCache) {
+    [data writeToFile:[self cachePathForKey:key] atomically:YES];
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)storeData:(NSData*)data forLoader:(TTRequestLoader*)loader {
-    [self storeData:data forKey:loader.cacheKey];
+  [self storeData:data forKey:loader.cacheKey];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -536,11 +530,7 @@ static NSMutableDictionary* gNamedCaches = nil;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)storeEtag:(NSString*)etag forKey:(NSString*)key {
-  NSString* filePath = [self etagCachePathForKey:key];
-  NSFileManager* fm = [NSFileManager defaultManager];
-  [fm createFileAtPath: filePath
-              contents: [etag dataUsingEncoding:NSUTF8StringEncoding]
-            attributes: nil];
+  [[etag dataUsingEncoding:NSUTF8StringEncoding] writeToFile:[self etagCachePathForKey:key] atomically:YES];
 }
 
 
@@ -657,8 +647,7 @@ static NSMutableDictionary* gNamedCaches = nil;
   _totalPixelCount = 0;
 
   if (fromDisk) {
-    NSFileManager* fm = [NSFileManager defaultManager];
-    [fm removeItemAtPath:_cachePath error:nil];
+    [[NSFileManager defaultManager] removeItemAtPath:_cachePath error:nil];
     [TTURLCache createPathIfNecessary:_cachePath];
   }
 }
@@ -680,25 +669,6 @@ static NSMutableDictionary* gNamedCaches = nil;
     NSDictionary* attrs = [NSDictionary dictionaryWithObject:invalidDate
       forKey:NSFileModificationDate];
 
-#if __IPHONE_4_0 <= __IPHONE_OS_VERSION_MAX_ALLOWED
-    [fm setAttributes:attrs ofItemAtPath:filePath error:nil];
-#else
-    [fm changeFileAttributes:attrs atPath:filePath];
-#endif
-  }
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)invalidateAll {
-  NSDate* invalidDate = [NSDate dateWithTimeIntervalSinceNow:-_invalidationAge];
-  NSDictionary* attrs = [NSDictionary dictionaryWithObject:invalidDate
-    forKey:NSFileModificationDate];
-
-  NSFileManager* fm = [NSFileManager defaultManager];
-  NSDirectoryEnumerator* e = [fm enumeratorAtPath:_cachePath];
-  for (NSString* fileName; fileName = [e nextObject]; ) {
-    NSString* filePath = [_cachePath stringByAppendingPathComponent:fileName];
 #if __IPHONE_4_0 <= __IPHONE_OS_VERSION_MAX_ALLOWED
     [fm setAttributes:attrs ofItemAtPath:filePath error:nil];
 #else

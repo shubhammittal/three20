@@ -233,10 +233,8 @@
 - (void)invalidateKey:(NSString*)key;
 
 /**
- * Invalidates all files in the disk cache according to rules explained in `invalidateURL`.
+ * Helpers, as name suggests
  */
-- (void)invalidateAll;
-
 - (void)logMemoryUsage;
 
 + (BOOL)createPathIfNecessary:(NSString*)path;

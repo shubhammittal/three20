@@ -117,24 +117,21 @@ static TTURLRequestQueue* gMainQueue = nil;
  */
 - (BOOL)dataExistsInBundle:(NSString*)URL {
   NSString* path = TTPathForBundleResource([URL substringFromIndex:9]);
-  NSFileManager* fm = [NSFileManager defaultManager];
-  return [fm fileExistsAtPath:path];
+  return [[NSFileManager defaultManager] fileExistsAtPath:path];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (BOOL)dataExistsInDocuments:(NSString*)URL {
   NSString* path = TTPathForDocumentsResource([URL substringFromIndex:12]);
-  NSFileManager* fm = [NSFileManager defaultManager];
-  return [fm fileExistsAtPath:path];
+  return [[NSFileManager defaultManager] fileExistsAtPath:path];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (NSData*)loadFromBundle:(NSString*)URL error:(NSError**)error {
   NSString* path = TTPathForBundleResource([URL substringFromIndex:9]);
-  NSFileManager* fm = [NSFileManager defaultManager];
-  if ([fm fileExistsAtPath:path]) {
+  if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
     return [NSData dataWithContentsOfFile:path];
 
   } else if (error) {
@@ -148,8 +145,7 @@ static TTURLRequestQueue* gMainQueue = nil;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (NSData*)loadFromDocuments:(NSString*)URL error:(NSError**)error {
   NSString* path = TTPathForDocumentsResource([URL substringFromIndex:12]);
-  NSFileManager* fm = [NSFileManager defaultManager];
-  if ([fm fileExistsAtPath:path]) {
+  if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
     return [NSData dataWithContentsOfFile:path];
 
   } else if (error) {
