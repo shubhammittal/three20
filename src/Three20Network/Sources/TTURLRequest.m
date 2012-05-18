@@ -198,38 +198,33 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (NSData*)generatePostBody {
 
-	NSMutableData* body = [NSMutableData data];
+  NSMutableData* body = [NSMutableData data];
   NSString* beginLine = [NSString stringWithFormat:@"--%@\r\n", kStringBoundary];
-	NSString *endLine = @"\r\n";
-	
-  for (id key in [_parameters keyEnumerator]) {
-    NSString* value = [_parameters valueForKey:key];
+  NSString *endLine = @"\r\n";
+
+  for (id key in [NSArray arrayWithArray:[_parameters allKeys]]) {
+    id value = [_parameters valueForKey:key];
     // Really, this can only be an NSString. We're cheating here.
     if (![value isKindOfClass:[UIImage class]] &&
         ![value isKindOfClass:[NSData class]]) {
+      if (![value respondsToSelector:@selector(dataUsingEncoding:)])
+        value = [NSString stringWithFormat:@"%@", value];
       [body appendData:[beginLine dataUsingEncoding:NSUTF8StringEncoding]];
       [body appendData:[[NSString
         stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key]
           dataUsingEncoding:_charsetForMultipart]];
       [body appendData:[value dataUsingEncoding:_charsetForMultipart]];
-		[body appendData:[endLine dataUsingEncoding:NSUTF8StringEncoding]];
+      [body appendData:[endLine dataUsingEncoding:NSUTF8StringEncoding]];
     }
-  }
-
-  NSString* imageKey = nil;
-  for (id key in [_parameters keyEnumerator]) {
-    if ([[_parameters objectForKey:key] isKindOfClass:[UIImage class]]) {
-      UIImage* image = [_parameters objectForKey:key];
+    else if ([value isKindOfClass:[UIImage class]]) {
       CGFloat quality = [TTURLRequestQueue mainQueue].imageCompressionQuality;
-      NSData* data = UIImageJPEGRepresentation(image, quality);
-
+      NSData* data = UIImageJPEGRepresentation(value, quality);
       [self appendImageData:data withName:key toBody:body];
-      imageKey = key;
-
-    } else if ([[_parameters objectForKey:key] isKindOfClass:[NSData class]]) {
-      NSData* data = [_parameters objectForKey:key];
-      [self appendImageData:data withName:key toBody:body];
-      imageKey = key;
+      [_parameters removeObjectForKey:key];
+    }
+    else {
+      [self appendImageData:value withName:key toBody:body];
+      [_parameters removeObjectForKey:key];
     }
   }
 
@@ -249,17 +244,11 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
     [body appendData:[[NSString stringWithFormat:@"Content-Type: %@\r\n\r\n", mimeType]
           dataUsingEncoding:_charsetForMultipart]];
     [body appendData:data];
-		[body appendData:[endLine dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[endLine dataUsingEncoding:NSUTF8StringEncoding]];
   }
 
   [body appendData:[[NSString stringWithFormat:@"--%@--\r\n", kStringBoundary]
                    dataUsingEncoding:NSUTF8StringEncoding]];
-
-  // If an image was found, remove it from the dictionary to save memory while we
-  // perform the upload
-  if (imageKey) {
-    [_parameters removeObjectForKey:imageKey];
-  }
 
   TTDCONDITIONLOG(TTDFLAG_URLREQUEST, @"Sending %s", [body bytes]);
   return body;
