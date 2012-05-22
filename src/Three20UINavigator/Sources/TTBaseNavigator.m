@@ -383,6 +383,13 @@ __attribute__((weak_import));
 
   } else {
     UIViewController* previousSuper = controller.superController;
+    if (previousSuper) {
+      BOOL found = NO;
+      for (UIViewController* sc = previousSuper; !found && sc; sc = sc.superController) {
+        found |= (sc == parentController);
+      }
+      if (!found) previousSuper = nil;
+    }
     if (nil != previousSuper) {
       if (previousSuper != parentController) {
         // The controller already exists, so we just need to make it visible

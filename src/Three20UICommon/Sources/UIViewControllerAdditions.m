@@ -62,7 +62,7 @@ TT_FIX_CATEGORY_BUG(UIViewControllerAdditions)
  * top of the UIViewController class, such as setting the super controller.
  *
  * Removal was previously accomplished by swizzling the dealloc method of UIViewController with a
- * custom implementation. Apple has now stated that we can no longer due this.
+ * custom implementation. Apple has now stated that we can no longer do this.
  *
  * See TTGarbageCollection additions at the bottom of this file for more implementation details.
  *
