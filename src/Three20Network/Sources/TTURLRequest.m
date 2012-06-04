@@ -138,23 +138,26 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (NSString*)generateCacheKey {
   if ([_httpMethod isEqualToString:@"POST"]
-      || [_httpMethod isEqualToString:@"PUT"]) {
+      || [_httpMethod isEqualToString:@"PUT"]
+      || [_httpMethod isEqualToString:@"DELETE"]) {
     NSMutableString* joined = [[[NSMutableString alloc] initWithString:self.urlPath] autorelease];
     NSEnumerator* e = [_parameters keyEnumerator];
     for (id key; key = [e nextObject]; ) {
       [joined appendString:key];
       [joined appendString:@"="];
-      NSObject* value = [_parameters valueForKey:key];
+      id value = [_parameters valueForKey:key];
       if ([value isKindOfClass:[NSString class]]) {
         [joined appendString:(NSString*)value];
       }
+      else {
+        [joined appendFormat:@"%@",value];
+      }
     }
-
+    uint requestId = (arc4random() % UINT_MAX);
+    [joined appendFormat:@"rand=%u",requestId];
     return [joined md5Hash];
-
-  } else {
-    return [self.urlPath md5Hash];
   }
+  return [self.urlPath md5Hash];
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

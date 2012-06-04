@@ -374,9 +374,10 @@ static TTURLRequestQueue* gMainQueue = nil;
 
   TTRequestLoader* loader = nil;
 
-  // If we're not POSTing or PUTting data, let's see if we can jump on an existing request.
+  // If we're not POSTing or PUTting or DELETEing data, let's see if we can jump on an existing request.
   if (![request.httpMethod isEqualToString:@"POST"]
-      && ![request.httpMethod isEqualToString:@"PUT"]) {
+      && ![request.httpMethod isEqualToString:@"PUT"]
+      && ![request.httpMethod isEqualToString:@"DELETE"]) {
     // Next, see if there is an active loader for the URL and if so join that bandwagon.
     loader = [_loaders objectForKey:request.cacheKey];
     if (loader) {
@@ -493,6 +494,24 @@ static TTURLRequestQueue* gMainQueue = nil;
 - (void)cancelAllRequests {
   for (TTRequestLoader* loader in [[[_loaders copy] autorelease] objectEnumerator]) {
     [loader cancel];
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)cancelAllGetRequests {
+  for (TTRequestLoader* loader in [[[_loaders copy] autorelease] objectEnumerator]) {
+    if ([[loader requests] count] == 0) {
+      [loader cancel];
+      continue;
+    }
+
+    TTURLRequest *request = [[loader requests] objectAtIndex:0];
+    if (![request.httpMethod isEqualToString:@"POST"]
+        && ![request.httpMethod isEqualToString:@"PUT"]
+        && ![request.httpMethod isEqualToString:@"DELETE"]) {
+      [loader cancel];
+    }
   }
 }
 

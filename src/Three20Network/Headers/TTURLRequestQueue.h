@@ -142,6 +142,8 @@
  */
 - (void)cancelAllRequests;
 
+- (void)cancelAllGetRequests;
+
 /**
  * Create a Cocoa URL request from a Three20 URL request.
  */
