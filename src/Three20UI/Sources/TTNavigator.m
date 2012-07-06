@@ -171,8 +171,8 @@ UIViewController* TTOpenURLFromView(NSString* URL, UIView* view) {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-- (Class)navigationControllerClass {
-  return [TTNavigationController class];
+- (UINavigationController *)createNavigationController {
+  return [[[TTNavigationController alloc] init] autorelease];
 }
 
 

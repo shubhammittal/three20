@@ -274,7 +274,7 @@ __attribute__((weak_import));
     // If this is the first controller, and it is not a "container", forcibly put
     // a navigation controller at the root of the controller hierarchy.
     if (nil == _rootViewController && !isContainer) {
-      [self setRootViewController:[[[[self navigationControllerClass] alloc] init] autorelease]];
+      [self setRootViewController:[self createNavigationController]];
     }
 
     if (nil != parentURLPath) {
@@ -316,8 +316,7 @@ __attribute__((weak_import));
                                         animated: animated];
 
   } else {
-    UINavigationController* navController = [[[[self navigationControllerClass] alloc] init]
-                                             autorelease];
+    UINavigationController* navController = [self createNavigationController];
     navController.modalTransitionStyle = transition;
     navController.modalPresentationStyle = controller.modalPresentationStyle;
     [navController pushViewController: controller
@@ -1018,8 +1017,8 @@ __attribute__((weak_import));
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-- (Class)navigationControllerClass {
-  return [TTBaseNavigationController class];
+- (UINavigationController *)createNavigationController {
+    return [[[TTBaseNavigationController alloc] init] autorelease];
 }
 
 
