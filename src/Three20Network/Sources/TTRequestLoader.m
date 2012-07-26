@@ -423,15 +423,20 @@ didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge{
   TT_RELEASE_SAFELY(_connection);
 
   if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCannotFindHost
-      && _retriesLeft) {
+      && _retriesLeft && _requests.count > 0) {
     // If there is a network error then we will wait and retry a few times in case
     // it was just a temporary blip in connectivity.
-    --_retriesLeft;
-    [self load:[NSURL URLWithString:_urlPath]];
-
-  } else {
-    [_queue loader:self didFailLoadWithError:error];
+    NSTimeInterval minTimeout = [[_requests objectAtIndex:0] timeoutInterval];
+    for (int i = 1; i < _requests.count; i++) {
+      minTimeout = MIN(minTimeout, [[_requests objectAtIndex:i] timeoutInterval]);
+    }
+    if (_startTime + minTimeout > [[NSDate date] timeIntervalSince1970]) {
+      --_retriesLeft;
+      [self load:[NSURL URLWithString:_urlPath]];
+      return;
+    }
   }
+  [_queue loader:self didFailLoadWithError:error];
 }
 
 

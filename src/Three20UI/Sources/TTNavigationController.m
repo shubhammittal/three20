@@ -34,7 +34,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)pushAnimationDidStop {
-  [TTURLRequestQueue mainQueue].suspended = NO;
+  // [TTURLRequestQueue mainQueue].suspended = NO;
 
   [super pushAnimationDidStop];
 }
@@ -43,7 +43,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)pushViewController: (UIViewController*)controller
     animatedWithTransition: (UIViewAnimationTransition)transition {
-  [TTURLRequestQueue mainQueue].suspended = YES;
+  // [TTURLRequestQueue mainQueue].suspended = YES;
 
   [super pushViewController:controller animatedWithTransition:transition];
 }
@@ -51,7 +51,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (UIViewController*)popViewControllerAnimatedWithTransition:(UIViewAnimationTransition)transition {
-  [TTURLRequestQueue mainQueue].suspended = YES;
+  // [TTURLRequestQueue mainQueue].suspended = YES;
 
   return [super popViewControllerAnimatedWithTransition:transition];
 }
