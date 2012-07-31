@@ -223,16 +223,13 @@ static const NSInteger kLoadMaxRetries = 2;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (BOOL)cancel:(TTURLRequest*)request {
-  NSUInteger requestIndex = [_requests indexOfObject:request];
-  if (requestIndex != NSNotFound) {
+  if ([_requests containsObject:request]) {
     request.isLoading = NO;
-
     if ([request.delegate respondsToSelector:@selector(requestDidCancelLoad:)]) {
       [request.delegate requestDidCancelLoad:request];
     }
-
-    [_requests removeObjectAtIndex:requestIndex];
   }
+  [_requests removeObject:request];
 
   if (![_requests count]) {
     [_queue loaderDidCancel:self wasLoading:!!_connection];
