@@ -394,7 +394,7 @@ static TTURLRequestQueue* gMainQueue = nil;
     while (index < _loaderQueue.count) {
       TTRequestLoader *curLoader = [_loaderQueue objectAtIndex:index];
       if (curLoader.requests.count > 0 &&
-          request.priority > [[curLoader.requests objectAtIndex:0] priority]) {
+          request.priority > [(TTURLRequest *)[curLoader.requests objectAtIndex:0] priority]) {
         break;
       }
       ++index;

@@ -184,15 +184,11 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
 
   [body appendData:[beginLine dataUsingEncoding:NSUTF8StringEncoding]];
   [body appendData:[[NSString stringWithFormat:
-                     @"Content-Disposition: form-data; name=\"%@\"; filename=\"image.jpg\"\r\n",
-                     name]
-                     dataUsingEncoding:_charsetForMultipart]];
-  [body appendData:[[NSString
-                      stringWithFormat:@"Content-Length: %d\r\n", data.length]
-                     dataUsingEncoding:_charsetForMultipart]];
-  [body appendData:[[NSString
-                      stringWithString:@"Content-Type: image/jpeg\r\n\r\n"]
-                     dataUsingEncoding:_charsetForMultipart]];
+                     @"Content-Disposition: form-data; name=\"%@\"; filename=\"image.jpg\"\r\n", name]
+                    dataUsingEncoding:_charsetForMultipart]];
+  [body appendData:[[NSString stringWithFormat:@"Content-Length: %d\r\n", data.length]
+                    dataUsingEncoding:_charsetForMultipart]];
+  [body appendData:[@"Content-Type: image/jpeg\r\n\r\n" dataUsingEncoding:_charsetForMultipart]];
   [body appendData:data];
 		[body appendData:[endLine dataUsingEncoding:NSUTF8StringEncoding]];
 }
@@ -301,11 +297,10 @@ const NSTimeInterval TTURLRequestUseQueueTimeout = -1.0;
   } else if ([_httpMethod isEqualToString:@"POST"]
              || [_httpMethod isEqualToString:@"PUT"]) {
     if (_multiPartForm) {
-      return [NSString stringWithFormat:@"multipart/form-data; boundary=%@", kStringBoundary];      
+      return [NSString stringWithFormat:@"multipart/form-data; boundary=%@", kStringBoundary];
     } else {
-      return [NSString stringWithFormat:@"application/x-www-form-urlencoded", kStringBoundary];            
+      return @"application/x-www-form-urlencoded";
     }
-    
   } else {
     return nil;
   }
