@@ -332,6 +332,7 @@ static TTURLRequestQueue* gMainQueue = nil;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)removeLoader:(TTRequestLoader*)loader {
   --_totalLoading;
+  if (_totalLoading < 0) _totalLoading = 0;
   [_loaders removeObjectForKey:loader.cacheKey];
 }
 
@@ -495,6 +496,7 @@ static TTURLRequestQueue* gMainQueue = nil;
   for (TTRequestLoader* loader in [[[_loaders copy] autorelease] objectEnumerator]) {
     [loader cancel];
   }
+  _totalLoading = 0;
 }
 
 
